@@ -1,18 +1,17 @@
 import os
-
-os.system("mkdir build bin src headers third-party")
+os.system("mkdir build bin src lib headers third-party")
 with open("src/main.c", "w") as file:
     file.write("#include <stdio.h>\n\nint main() {\n")
     file.write("\tprintf(\"Hello, World!\\n\");\n")
     file.write("\treturn 0;\n}")
 
 win = """
-gcc -Wall -Wextra -Werror -o ./bin/main ./src/main.c
+gcc -Wall -Wextra -Werror -I./headers -o ./bin/main ./src/main.c
 """
 
 linux = """    
-gcc -Wall -Wextra -Werror -o ./bin/main ./src/main.c
-x86_64-w64-mingw32-gcc -Wall -Wextra -Werror -o ./bin/main ./src/main.c
+gcc -Wall -Wextra -Werror -I./headers -o ./bin/main ./src/main.c
+x86_64-w64-mingw32-gcc -Wall -Wextra -Werror -I./headers o ./bin/main ./src/main.c
 """
 
 os.system("touch build/build.sh")
