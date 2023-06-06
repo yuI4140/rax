@@ -1,5 +1,6 @@
 import os
 os.system("mkdir build bin src headers third-party")
+os.system("touch src/main.c")
 win="""
 gcc -Wall -Wextra -Werror -o ../bin/main ../src/main.c
 """
