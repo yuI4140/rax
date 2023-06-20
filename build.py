@@ -187,96 +187,12 @@ typedef struct dirent *Drep;
 win = """
 gcc -Wall -Wextra -Werror -I./headers -o ./bin/main ./src/main.c
 """
-helper="""
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-void printc(int endl, const char *fmt);
-char *format(const char *format, ...);
-char *readFile(const char *filename);
-void writeFile(const char *filename, const char *format, ...);
-#ifdef HLP_IMP
-char *readFile(const char *filename) {
-  FILE *file = fopen(filename, "r");
-  if (file == NULL) {
-    printf("Failed to open file: %s\n", filename);
-    return NULL;
-  }
-  // Determine the file size
-  fseek(file, 0, SEEK_END);
-  long file_size = ftell(file);
-  fseek(file, 0, SEEK_SET);
-  // Allocate memory for the file contents
-  char *buffer = (char *)malloc((file_size + 1) * sizeof(char));
-  if (buffer == NULL) {
-    fclose(file);
-    printf("Failed to allocate memory for file contents.\n");
-    return NULL;
-  }
-  // Read the file contents into the buffer
-  size_t result = fread(buffer, sizeof(char), file_size, file);
-  if (result != file_size) {
-    fclose(file);
-    free(buffer);
-    printf("Failed to read file: %s\n", filename);
-    return NULL;
-  }
-  buffer[file_size] = '\0'; // Null-terminate the buffer
-  fclose(file);
-  return buffer;
-}
-void writeFile(const char *filename, const char *format, ...) {
-  FILE *file = fopen(filename, "w");
-  if (file == NULL) {
-    printf("Failed to open file: %s\n", filename);
-    return;
-  }
-  va_list args;
-  va_start(args, format);
-
-  vfprintf(file, format, args);
-
-  va_end(args);
-
-  fclose(file);
-}
-char *format(const char *format, ...) {
-  va_list args;
-  va_start(args, format);
-  // Determine the length of the formatted string
-  va_list args_copy;
-  va_copy(args_copy, args);
-  int len = vsnprintf(NULL, 0, format, args_copy);
-  va_end(args_copy);
-  // Allocate memory for the formatted string
-  char *buffer = (char *)malloc((len + 1) * sizeof(char));
-  // Format the string
-  vsprintf(buffer, format, args);
-  va_end(args);
-  return buffer;
-}
-void printc(int endl, const char *fmt) {
-  int i = 0;
-  while (fmt[i] != '\0') {
-    putchar(fmt[i]);
-    i++;
-  }
-  if (endl == 1) {
-    putchar('\n');
-  }
-}
-#endif
-"""
 linux = """    
 gcc -Wall -Wextra -Werror -I./headers -o ./bin/main ./src/main.c
 x86_64-w64-mingw32-gcc -Wall -Wextra -Werror -I./headers -o ./bin/main ./src/main.c
 """
-
 with open("build/build.sh", "w") as sh_file:
     sh_file.write(linux)
-with open("headers/helper.h", "w") as file:
-    file.write(helper)
 with open("headers/defines.h", "w") as file:
     file.write(defines)
 with open("build/build.bat", "w") as bat_file:
