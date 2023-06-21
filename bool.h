@@ -1,3 +1,4 @@
+#include <stdlib.h>
 struct bl {char value;};
 #ifdef BOOL_IMP
 typedef struct bl bool;
