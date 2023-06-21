@@ -65,6 +65,10 @@ typedef void (*vFnp)(void);
 #define Stringify(x) #x
 #define StringifyMacro(x) Stringify(x)
 #endif /*DEF_STR*/
+#ifdef DEF_BOOL
+#define BOOL_IMP
+#include "./bool.h"
+#endif /* DEF_BOOL */
 #ifdef DEF_DIR
 #include <dirent.h>
 #include <stdio.h>
@@ -191,6 +195,7 @@ linux = """
 gcc -Wall -Wextra -Werror -I./headers -o ./bin/main ./src/main.c
 x86_64-w64-mingw32-gcc -Wall -Wextra -Werror -I./headers -o ./bin/main ./src/main.c
 """
+os.system("mv ./bool.h headers")
 with open("build/build.sh", "w") as sh_file:
     sh_file.write(linux)
 with open("headers/defines.h", "w") as file:
