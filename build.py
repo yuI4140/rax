@@ -70,11 +70,11 @@ typedef void (*vFnp)(void);
 #include <stdio.h>
 
 // DIr pointer
-typedef DIR *Drp;
+typedef DIR *Dirp;
 // file pointer
-typedef FILE *Fsp;
+typedef FILE *Filep;
 // dir entity pointer
-typedef struct dirent *Drep;
+typedef struct dirent *Direp;
 #endif
 #ifdef DEF_MATH
 #define IS_DIGIT(c) ((c) >= '0' && (c) <= '9')
