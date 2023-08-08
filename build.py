@@ -6,23 +6,24 @@ with open("src/main.c", "w") as file:
     file.write("\treturn 0;\n}")
 defines="""
 #pragma once
+#include<stdint.h>
 // Unsigned int types.
-typedef unsigned char u8;
-typedef unsigned short u16;
-typedef unsigned int u32;
-typedef unsigned long long u64;
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
 typedef unsigned long _u64;
 // Signed int types.
-typedef signed char s8;
-typedef signed short s16;
-typedef signed int s32;
-typedef signed long long s64;
+typedef int8_t s8;
+typedef int16_t s16;
+typedef int32_t s32;
+typedef int64_t s64;
 typedef signed long _s64;
 // Regular int types.
-typedef char i8;
-typedef short i16;
-typedef int i32;
-typedef long long i64;
+typedef int8_t i8;
+typedef int16_t i16;
+typedef int32_t i32;
+typedef int64_t i64;
 typedef long _i64;
 // Floating point types
 typedef float f32;
@@ -44,7 +45,6 @@ typedef void (*vFnp)(void);
 #define true 1
 #define false 0
 #define null 0
-#define WCHAR_MAX 0xffff
 #define nullptr ((void *)0)
 #define UNUSED(var) ((void)(var))
 #define DEPRECATED(msg) __attribute__((deprecated(msg)))
