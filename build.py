@@ -33,7 +33,7 @@ typedef u8 b8;
 typedef u32 b32;
 // stirng types
 // char*
-typedef i8 *str;
+typedef char *str;
 // const char*
 typedef const str cstr;
 // void
@@ -189,11 +189,11 @@ typedef struct dirent *Direp;
 #endif /* DEF_BIT*/
 """
 win = """
-gcc -Wall -Wextra -Werror -I./headers -o ./bin/main ./src/main.c
+gcc -Wall -Wextra -Werror -Wpedantic -I./headers -o ./bin/main ./src/main.c
 """
 linux = """    
-gcc -Wall -Wextra -Werror -I./headers -o ./bin/main ./src/main.c
-x86_64-w64-mingw32-gcc -Wall -Wextra -Werror -I./headers -o ./bin/main ./src/main.c
+gcc -Wall -Wextra -Werror -Wpedantic -I./headers -o ./bin/main ./src/main.c
+#x86_64-w64-mingw32-gcc -Wall -Wextra -Werror -Wpedantic -I./headers -o ./bin/main ./src/main.c
 """
 with open("build/build.sh", "w") as sh_file:
     sh_file.write(linux)
