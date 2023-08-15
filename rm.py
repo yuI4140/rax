@@ -15,17 +15,17 @@ create an issue.\n
 
 if platform.system() == "Linux":
     if argc != 0 and argv[1] == "--nla":
-        os.system("python3 ./buildproj/build.py")
-        os.system("mv ./buildproj/bool.h ./headers")
-        os.system("sudo rm -r ./buildproj/.git")
-        os.system("sudo rm -r ./buildproj/")
+        os.system("python3 ./buildProj/build.py")
+        os.system("mv ./buildProj/bool.h ./headers")
+        os.system("sudo rm -r ./buildProj/.git")
+        os.system("sudo rm -r ./buildProj/")
     else:
         print("Disable LINUX_ADV by setting the flag: " + argv[0] + " --nla")
         print(LINUX_ADV)
-        os.system("python3 ./buildproj/build.py")
-        os.system("mv ./buildproj/bool.h ./headers")
-        os.system("sudo rm -r ./buildproj/.git")
-        os.system("sudo rm -r ./buildproj/")
+        os.system("python3 ./buildProj/build.py")
+        os.system("mv ./buildProj/bool.h ./headers")
+        os.system("sudo rm -r ./buildProj/.git")
+        os.system("sudo rm -r ./buildProj/")
 elif platform.system() == "Windows":
     os.system("py .\\buildproj\\build.py")
     files = glob.glob(".\\buildproj\\*[!py]")
