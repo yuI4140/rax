@@ -17,7 +17,8 @@ if platform.system() == "Linux":
     if argc != 0 and argv[1] == "--nla":
         os.system("python3 ./buildProj/build.py")
         os.system("mv ./buildProj/bool.h ./headers")
-        os.system("mv ./buildProj/arenas/ ./headers")
+        os.system("mv ./buildProj/arenas/* ./headers")
+        os.system("rm -r ./headers/*.md")
         os.system("sudo rm -r ./buildProj/.git")
         os.system("sudo rm -r ./buildProj/")
     else:
@@ -25,7 +26,8 @@ if platform.system() == "Linux":
         print(LINUX_ADV)
         os.system("python3 ./buildProj/build.py")
         os.system("mv ./buildProj/bool.h ./headers")
-        os.system("mv ./buildProj/arenas/ ./headers")
+        os.system("mv ./buildProj/arenas/* ./headers")
+        os.system("rm -r ./headers/*.md")
         os.system("sudo rm -r ./buildProj/.git")
         os.system("sudo rm -r ./buildProj/")
 elif platform.system() == "Windows":
@@ -35,6 +37,7 @@ elif platform.system() == "Windows":
         os.rename(f, os.path.basename(f))
     os.system("rmdir /s /q .\\buildproj")
     os.system("move ./bool.h ./headers")
-    os.system("move ./arenas/ ./headers")
+    os.system("move ./arenas/* ./headers")
+    os.system("del .\\headers\\*.md")
 else:
     print(platform.system() + " is not supported")
