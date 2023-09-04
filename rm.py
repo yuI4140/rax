@@ -23,7 +23,7 @@ if platform.system() == "Linux":
         print("Disable LINUX_ADV by setting the flag: " + argv[0] + " --nla")
         print(LINUX_ADV)
         os.system("python3 ./buildProj/build.py")
-        os.system("mv ./buildProj/bool.h ./headers")
+        os.system("mv ./buildProj/*.h ./headers")
         os.system("sudo rm -r ./buildProj/.git")
         os.system("sudo rm -r ./buildProj/")
 elif platform.system() == "Windows":
@@ -32,6 +32,6 @@ elif platform.system() == "Windows":
     for f in files:
         os.rename(f, os.path.basename(f))
     os.system("rmdir /s /q .\\buildproj")
-    os.system("move ./bool.h ./headers")
+    os.system("move ./*.h ./headers")
 else:
     print(platform.system() + " is not supported")
