@@ -189,10 +189,10 @@ typedef struct dirent *Direp;
 #endif /* DEF_BIT*/
 """
 win = """
-gcc -Wall -Wextra -Werror -Wpedantic -I./headers -o ./bin/main ./src/main.c
+gcc -Wall -g -Wextra -Werror -Wpedantic -I./headers -o ./bin/main ./src/main.c
 """
 linux = """    
-gcc -Wall -Wextra -Werror -Wpedantic -I./headers -o ./bin/main ./src/main.c
+gcc -Wall -g -Wextra -Werror -Wpedantic -I./headers -o ./bin/main ./src/main.c
 #x86_64-w64-mingw32-gcc -Wall -Wextra -Werror -Wpedantic -I./headers -o ./bin/main ./src/main.c
 """
 with open("build/build.sh", "w") as sh_file:
