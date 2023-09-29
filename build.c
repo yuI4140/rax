@@ -244,23 +244,6 @@ void buildProject() {
   nob_cmd_run_sync(cmd);
   nob_log(NOB_INFO, "project build successfully!");
 }
-void buildProject_ex(String *path) {
-#ifdef WIN32
-#define COMPILER "gcc"
-#else
-#define COMPILER "clang"
-#endif
-  nob_log(NOB_INFO, "building project...");
-  Nob_Cmd cmd = {0};
-  String *exe_path = path;
-#ifdef WIN32
-  popCountStr(exe_path, 6);
-#endif
-  nob_cmd_append(&cmd, COMPILER, "-Wall", "-Wextra", "-Wpedantic", "-o",
-                 (char *)exe_path->value, "./src/main.c");
-  nob_cmd_run_sync(cmd);
-  nob_log(NOB_INFO, "project build successfully!");
-}
 bool subcommands(int argc, char *argv[]) {
   String *config_path = newStr("./hbuild/build.conf");
   if (argc <= 1) {
