@@ -60,6 +60,7 @@ void replaceCharStr(String *str,char old,char _new);
 #define MV_CHAR(dest,src) do{if(dest!=src){memcpy(&dest,&src,sizeof(char));src=0;}}while(0)
 #define CP_CHAR(dest,src) do{if(dest!=src){memcpy(&dest,&src,sizeof(char));}}while(0) 
 size_t findCharStr(String *str, char ch); 
+void rmNewLineStr(String *str);
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
 #include <math.h>
 #include <errno.h>
@@ -221,4 +222,15 @@ size_t findCharStr(String *str, char ch) {
    } 
    return 0; 
 } 
+void rmNewLineStr(String *str) {
+    fiterate_str(str){
+    if (atStr(str,it) == '\n') {
+      char p_str=atStr(str,it + 1);
+      memmove(&str[it],&p_str, str->size - it);
+      --str->size;
+      --it;
+    }
+  }
+}
+
 #endif // END OF STRING_IMP
