@@ -21,11 +21,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 #include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
-#include <stdint.h>
 typedef struct String {
   size_t size;
   char value[];
@@ -38,32 +38,45 @@ void *allocPtr(size_t size);
 String *allocStr(size_t size);
 void clearStr(String *str);
 char atStr(String *str, size_t index);
-void mvStr(String *dest,String *src);
+void mvStr(String *dest, String *src);
 void implicitStr(String *str);
 String *newStr(const char arr[]);
 // compare two sets of strings
 bool strEq(String *a, String *b);
 // is the same as strsub of C++
 void strCut(String *src, uint32_t start, uint32_t end);
-const char* c_str(String *str);
-void strConcat(String *dest,String *src);
-void pushCharStr(String *dest,char ch);
-void pushCharpStr(String *dest,const char *chp);
+const char *c_str(String *str);
+void strConcat(String *dest, String *src);
+void pushCharStr(String *dest, char ch);
+void pushCharpStr(String *dest, const char *chp);
 void popStr(String *src);
-void popCountStr(String *src,uint32_t count);
+void popCountStr(String *src, uint32_t count);
 String *intToString(int num);
 String *floatToString(float num);
-#define fiterate_str(str) for(size_t it=0;it<str->size;++it)
-#define witerate_str(str) size_t it=0;while(str->value[it]!='\0')
-void str_snprintf(String *buffer,const char* fmt,...);
-void replaceCharStr(String *str,char old,char _new);
-#define MV_CHAR(dest,src) do{if(dest!=src){memcpy(&dest,&src,sizeof(char));src=0;}}while(0)
-#define CP_CHAR(dest,src) do{if(dest!=src){memcpy(&dest,&src,sizeof(char));}}while(0) 
-size_t findCharStr(String *str, char ch); 
+#define fiterate_str(str) for (size_t it = 0; it < str->size; ++it)
+#define witerate_str(str)                                                      \
+  size_t it = 0;                                                               \
+  while (str->value[it] != '\0')
+void str_snprintf(String *buffer, const char *fmt, ...);
+void replaceCharStr(String *str, char old, char _new);
+#define MV_CHAR(dest, src)                                                     \
+  do {                                                                         \
+    if (dest != src) {                                                         \
+      memcpy(&dest, &src, sizeof(char));                                       \
+      src = 0;                                                                 \
+    }                                                                          \
+  } while (0)
+#define CP_CHAR(dest, src)                                                     \
+  do {                                                                         \
+    if (dest != src) {                                                         \
+      memcpy(&dest, &src, sizeof(char));                                       \
+    }                                                                          \
+  } while (0)
+size_t findCharStr(String *str, char ch);
 void rmNewLineStr(String *str);
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
-#include <math.h>
 #include <errno.h>
+#include <math.h>
 int32_t strToInt(String *str);
 float strToFloatPointer(String *str);
 #define HANDLER_CONVER_ERR(result)                                             \
@@ -77,9 +90,9 @@ float strToFloatPointer(String *str);
   } while (0)
 #define NEW_STR(x)                                                             \
   _Generic((x),                                                                \
-      int: intToString(x),                                             \
-      float: floatToString(x),                                         \
-      double: floatToString(x),                                        \
+      int: intToString(x),                                                     \
+      float: floatToString(x),                                                 \
+      double: floatToString(x),                                                \
       default: NULL)
 #endif
 #ifdef STRING_IMP
@@ -100,8 +113,8 @@ String *allocStr(size_t size) {
   return str;
 }
 void clearStr(String *str) {
-    str->size=0;
-    memset(str->value, 0, str->size);
+  str->size = 0;
+  memset(str->value, 0, str->size);
 }
 char atStr(String *str, size_t index) {
   if (index >= str->size) {
@@ -110,62 +123,62 @@ char atStr(String *str, size_t index) {
   }
   return str->value[index];
 }
-void mvStr(String *dest,String *src){
-    clearStr(dest);
-    dest->size=src->size;
-    memmove(dest->value,src->value,src->size);
+void mvStr(String *dest, String *src) {
+  clearStr(dest);
+  dest->size = src->size;
+  memmove(dest->value, src->value, src->size);
 }
-void mvCharpToStr(String *dest,const char*src){
-    clearStr(dest);
-    dest->size=strlen(src);
-    memmove(dest->value,src,strlen(src)-1);
-    implicitStr(dest);
+void mvCharpToStr(String *dest, const char *src) {
+  clearStr(dest);
+  dest->size = strlen(src);
+  memmove(dest->value, src, strlen(src) - 1);
+  implicitStr(dest);
 }
-void implicitStr(String *str){
-       size_t lengh=strlen(str->value);
-       str->size=lengh;
+void implicitStr(String *str) {
+  size_t lengh = strlen(str->value);
+  str->size = lengh;
 }
-void strConcat(String *dest,String *src){
-     memmove((char*)dest->value+dest->size,src->value,src->size);
-    implicitStr(dest);
+void strConcat(String *dest, String *src) {
+  memmove((char *)dest->value + dest->size, src->value, src->size);
+  implicitStr(dest);
 }
-String *newStr(const char arr[]){
-    size_t size=strlen(arr);
-    String *str=allocStr(size);
-    memcpy(str->value,arr,size);
-    return str;
+String *newStr(const char arr[]) {
+  size_t size = strlen(arr);
+  String *str = allocStr(size);
+  memcpy(str->value, arr, size);
+  return str;
 }
-bool strEq(String *a, String *b){
-    return memcmp(a->value,b->value,a->size)!=0?false:true;
+bool strEq(String *a, String *b) {
+  return memcmp(a->value, b->value, a->size) != 0 ? false : true;
 }
 void strCut(String *src, uint32_t start, uint32_t end) {
-    ptrWrapper(src);
-    assert(start < end && end <= src->size);
-    memmove(src->value,(char*)src->value+start,end);
-    implicitStr(src);
+  ptrWrapper(src);
+  assert(start < end && end <= src->size);
+  memmove(src->value, (char *)src->value + start, end);
+  implicitStr(src);
 }
 
-const char* c_str(String *str){
-   str->value[str->size] = '\0';
-   return str->value;
+const char *c_str(String *str) {
+  str->value[str->size] = '\0';
+  return str->value;
 }
-void pushCharStr(String *dest,char ch){
-    memcpy((char*)dest->value+dest->size,&ch,sizeof(char));
-    implicitStr(dest);
+void pushCharStr(String *dest, char ch) {
+  memcpy((char *)dest->value, &ch, sizeof(char));
+  implicitStr(dest);
 }
-void pushCharpStr(String *dest,const char *chp){
-    memcpy((char*)dest->value+dest->size,chp,strlen(chp));
-    implicitStr(dest);
+void pushCharpStr(String *dest, const char *chp) {
+  memcpy((char *)dest->value + dest->size, chp, strlen(chp));
+  implicitStr(dest);
 }
-void popStr(String *src){
-    src->value[src->size-1]='\0';
-    implicitStr(src);
+void popStr(String *src) {
+  src->value[src->size - 1] = '\0';
+  implicitStr(src);
 }
-void popCountStr(String *src,uint32_t count){
-    while (count!=0) {
-        popStr(src);
-        --count;
-    }
+void popCountStr(String *src, uint32_t count) {
+  while (count != 0) {
+    popStr(src);
+    --count;
+  }
 }
 
 void handlerResultConvertErr(String *str, String *endptr) {
@@ -189,44 +202,44 @@ float strToFloatPointer(String *str) {
   return float_num;
 }
 String *intToString(int num) {
-  String *str=allocStr(sizeof(int32_t));
-  snprintf((char*)str->value,str->size, "%d", num);
+  String *str = allocStr(sizeof(int32_t));
+  snprintf((char *)str->value, str->size, "%d", num);
   implicitStr(str);
   return str;
 }
 String *floatToString(float num) {
-   String *str=allocStr(sizeof(double));
-  snprintf(str->value,str->size, "%.2f", num);
+  String *str = allocStr(sizeof(double));
+  snprintf(str->value, str->size, "%.2f", num);
   implicitStr(str);
   return str;
 }
-void str_snprintf(String *buffer,const char* fmt,...){
-    va_list args;
-    va_start(args,fmt);
-    (void)vsnprintf((char*)buffer->value,buffer->size,fmt,args);
-    va_end(args); 
+void str_snprintf(String *buffer, const char *fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  (void)vsnprintf((char *)buffer->value, buffer->size, fmt, args);
+  va_end(args);
 }
-void replaceCharStr(String *str,char old,char _new){
-    fiterate_str(str){
-       if (atStr(str,it)==old) {
-           MV_CHAR(str->value[it],_new); 
-       } 
+void replaceCharStr(String *str, char old, char _new) {
+  fiterate_str(str) {
+    if (atStr(str, it) == old) {
+      MV_CHAR(str->value[it], _new);
     }
-} 
-size_t findCharStr(String *str, char ch) { 
-   fiterate_str(str) { 
-     if (atStr(str, it) == ch) { 
-       return it; 
-       break; 
-     } 
-   } 
-   return 0; 
-} 
+  }
+}
+size_t findCharStr(String *str, char ch) {
+  fiterate_str(str) {
+    if (atStr(str, it) == ch) {
+      return it;
+      break;
+    }
+  }
+  return 0;
+}
 void rmNewLineStr(String *str) {
-    fiterate_str(str){
-    if (atStr(str,it) == '\n') {
-      char p_str=atStr(str,it + 1);
-      memmove(&str[it],&p_str, str->size - it);
+  fiterate_str(str) {
+    if (atStr(str, it) == '\n') {
+      char p_str = atStr(str, it + 1);
+      memmove(&str[it], &p_str, str->size - it);
       --str->size;
       --it;
     }
