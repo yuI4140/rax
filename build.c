@@ -5,9 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 #define NOB_IMP
-#include "../nob.h"
+#include "./nob.h"
 #define STRING_IMP
-#include "../string/string_t.h"
+#include "./string/string_t.h"
 #include "macros.h"
 #define IO_STRING_IMP
 #include "./io_str.h"
