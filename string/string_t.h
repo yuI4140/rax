@@ -74,6 +74,7 @@ void replaceCharStr(String *str, char old, char _new);
   } while (0)
 size_t findCharStr(String *str, char ch);
 void rmNewLineStr(String *str);
+String **tokStr(String *text, char *delimeter);
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
 #include <errno.h>
 #include <math.h>
@@ -245,5 +246,12 @@ void rmNewLineStr(String *str) {
     }
   }
 }
-
+String **tokStr(String *text, char *delimeter) {
+  String **arr = (String **)allocPtr(256 * 2);
+  String *name = newStr(strtok((char *)c_str(text), delimeter));
+  arr[0] = name;
+  String *value = newStr(strtok(NULL, delimeter));
+  arr[1] = value;
+  return ptrWrapper(arr);
+}
 #endif // END OF STRING_IMP
