@@ -1,92 +1,29 @@
+#include <stdarg.h>
+#include <stdatomic.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #define NOB_IMP
-#include "./nob.h"
+#include "../nob.h"
 #define STRING_IMP
-#define DEF_BIT
-#include "string/string_t.h"
-#define witerate() while (true)
-#define UNUSED_ARGS(argc, argv)                                                \
-  do {                                                                         \
-    (void)argc;                                                                \
-    (void)argv;                                                                \
-  } while (0)
-void removeNewlines(char *str) {
-  int len = strlen(str);
-  for (int i = 0; i < len; i++) {
-    if (str[i] == '\n') {
-      memmove(&str[i], &str[i + 1], len - i);
-      len--;
-      i--;
-    }
-  }
-}
-typedef enum { POSIX, _WIN64_ } Target;
+#include "../string/string_t.h"
+#include "macros.h"
+#define IO_STRING_IMP
+#include "./io_str.h"
+typedef enum { LINUX, _WIN64_ } Target;
 typedef struct {
   Target target;
   String *path;
 } Config;
-const char *target_str[] = {[POSIX] = "POSIX", [_WIN64_] = "_WIN64_"};
-bool detectOsConfig() {
+#define CHARP_STR(str_value) ((char *)str_value)
+const char *target_str[] = {[LINUX] = "LINUX", [_WIN64_] = "_WIN64_"};
+static inline bool detectOsConfig(void) {
 #ifdef WIN32
   return _WIN64_;
 #else
-  return POSIX;
+  return LINUX;
 #endif
-}
-void handleIf(bool condition, const char *condition_name, int line) {
-  if (condition) {
-    nob_log(NOB_INFO, "OK=>%s", condition_name);
-  } else {
-    nob_log(NOB_ERROR, "=>%s fail! At line:%d", condition_name, line);
-    exit(0);
-  }
-}
-bool createFile(const char *path) {
-  FILE *fp = fopen(path, "w");
-  if (fp != NULL) {
-    fclose(fp);
-    return true;
-  }
-  return false;
-}
-bool appendToFile(const char *path, String *buffer) {
-  FILE *fp = fopen(path, "a");
-  if (fp != NULL) {
-    fprintf(fp, "%s", (char *)c_str(buffer));
-    fclose(fp);
-    return true;
-  }
-  return false;
-}
-#define mHandleIf(expr, expr_name) (handleIf(expr, expr_name, __LINE__))
-#define str_shift_args(argc, argv) newStr(nob_shift_args(argc, argv))
-#define v_shift_args(argc, argv) (void)nob_shift_args(argc, argv)
-void mvFIle(const char *dest, const char *src) {
-  char buffer[1024];
-  memset(buffer, 0, sizeof(buffer));
-  snprintf(buffer, sizeof(buffer), "copy_%s_to_%s", src, dest);
-  mHandleIf(nob_copy_file(src, dest), buffer);
-  remove(src);
-}
-String *extractLine(String *path, int32_t line) {
-  FILE *extract = fopen(c_str(path), "r");
-  mHandleIf(extract != NULL, "file_extract_null_check");
-  String *buffer = allocStr(256);
-  String *ret = allocStr(256);
-  int32_t cline = 0;
-  while ((fgets((char *)buffer->value, buffer->size, extract)) != NULL) {
-    if (cline == line) {
-      mvStr(ret, buffer);
-    }
-    ++cline;
-  }
-  fclose(extract);
-  return ret;
-}
-void checkConfigFile(Config conf) {
-  bool exists = nob_file_exists(c_str(conf.path)) == 0;
-  if (!exists) {
-    nob_log(NOB_WARNING, "Config not exists!");
-  }
 }
 Nob_String_Builder *convertStringToStringBuilder(String *str) {
   Nob_String_Builder *ret = allocPtr(sizeof(String));
@@ -95,45 +32,97 @@ Nob_String_Builder *convertStringToStringBuilder(String *str) {
   ret->items = (char *)c_str(str);
   return ret;
 }
-void readFile(const char *path, String *dest) {
-  FILE *fp = fopen(path, "r");
-  fseek(fp, 0, SEEK_END);
-  size_t size_f = ftell(fp);
-  fseek(fp, 0, SEEK_SET);
-  (void)fread((char *)dest->value, dest->size, size_f, fp);
-  fclose(fp);
-  dest->size = size_f;
+void testStr(String *str) {
+  printf("%s\n", c_str(str));
+  exit(0);
 }
-Config *newConfigExists(const char *path) {
-  Config conf = {0};
-  nob_log(NOB_INFO, "Reading file...");
-  String *content_conf = allocStr(256);
-  readFile(path, content_conf);
-  String *buffer = extractLine(content_conf, 0);
-  fiterate_str(buffer) {
-    if (atStr(buffer, it) == ':' && atStr(buffer, it) != '\n') {
-      if (atStr(buffer, it + 1) == 'P') {
-        conf.target = POSIX;
-        return &(Config){.path = conf.path, .target = conf.target};
-      } else if (atStr(buffer, it + 1) == 'W') {
-        conf.target = _WIN64_;
-        return &(Config){.path = conf.path, .target = conf.target};
+String *trackCharAndCut(String *text, int32_t line) {
+  int32_t temp_l = -1;
+  String *track = allocStr(256);
+  testStr(text);
+  fiterate_str(text) {
+    pushCharStr(track, atStr(text, it));
+    if (atStr(text, it) == '\n') {
+      ++temp_l;
+      if (temp_l == line) {
+        return track;
+        break;
+      } else {
+        clearStr(track);
+        continue;
       }
     }
   }
   return NULL;
 }
-void appendFileEx(const char *path, const char *text) {
-  FILE *fp = fopen(path, "a");
-  if (fp == NULL) {
-    nob_log(NOB_WARNING, "file cannot be append! => file = NULL");
-    exit(1);
+void cutLineStr(String *text, size_t dest[2], int32_t line) {
+  int32_t cline = -1, start = 0, end = 0;
+  fiterate_str(text) {
+    if (cline == line) {
+      break;
+    } else if (atStr(text, it) == '\n') {
+      if (line == 0) {
+        end = it;
+      } else {
+        start = end;
+        end = it;
+      }
+      ++cline;
+    }
   }
-  fprintf(fp, "%s", text);
-  fclose(fp);
+  dest[0] = start;
+  dest[1] = end;
+}
+void cutFromLineStr(String *text, int32_t desired_line) {
+  size_t dest[2] = {0};
+  cutLineStr(text, dest, desired_line);
+  int32_t dif = text->size - dest[1];
+  popCountStr(text, dif);
+  strCut(text, dest[0], dest[1]);
+  if (atStr(text, 0) == '\n') {
+    char *buffer = allocPtr(256);
+    copyFromTo((char *)text->value, buffer, 1, text->size);
+    buffer[strlen(buffer) + 1] = '\0';
+    clearStr(text);
+    memmove((char *)text->value, buffer, strlen(buffer));
+    implicitStr(text);
+    popStr(text);
+  }
+}
+String *findInConfig(const char *file_path, String *target) {
+  nob_log(NOB_INFO, "finding %s in Config file...", c_str(target));
+  String *ftext = allocStr(256);
+  readFile(file_path, ftext);
+  size_t cline = 0;
+  while (cline < ftext->size) {
+    String *cftext = allocStr(ftext->size);
+    mvStr(cftext, ftext);
+    cutFromLineStr(cftext, cline);
+    String **tokens = tokStr(cftext, ":");
+    if (tokens[1] != NULL && strEq(tokens[0], target)) {
+      return tokens[1];
+    }
+    ++cline;
+    clearStr(cftext);
+  }
+
+  nob_log(NOB_WARNING, "Target %s not found in the config file.",c_str(target));
+  return NULL;
+}
+Config *newConfigExists(const char *path) {
+  Config conf = {0};
+  nob_log(NOB_INFO, "Reading file...");
+  String *target = ptrWrapper(findInConfig(path, newStr("platform")));
+  String *_path = newStr(path);
+  conf.path = _path;
+  if (strEq(target, newStr("LINUX"))) {
+    conf.target = LINUX;
+  } else {
+    conf.target = _WIN64_;
+  }
+  return &(Config){.target = conf.target, .path = conf.path};
 }
 Config *createConfig(const char *path) {
-
   if (nob_file_exists(path) != 0) {
     newConfigExists(path);
   } else {
@@ -182,65 +171,62 @@ Config *startConfig(String *path) {
     exit(1);
   }
 }
-String *extractTwoPoints(int32_t line) {
-  String *two_points = extractLine(newStr("./hbuild/config.conf"), line);
-  fiterate_str(two_points) {
-    if (atStr(two_points, it) == ':' && atStr(two_points, it) != '\n') {
-      strCut(two_points, it + 1, two_points->size);
-    }
+String *getExecutable(void) {
+  String *proj_name =
+      findInConfig("./hbuild/build.conf", newStr("project_name"));
+  if (proj_name == NULL) {
+    nob_log(NOB_ERROR, "proj_name couldn't be found in Config file");
+    exit(0);
   }
-  return two_points;
-}
-String *extractTwoPoints_ex(String *path, int32_t line) {
-  String *two_points = extractLine(path, line);
-  fiterate_str(two_points) {
-    if (atStr(two_points, it) == ':' && atStr(two_points, it) != '\n') {
-      strCut(two_points, it + 1, two_points->size);
-    }
-  }
-  return two_points;
-}
-String *extractTwoPoints_ex2(String *path) {
-  String *two_points = path;
-  fiterate_str(two_points) {
-    if (atStr(two_points, it) == ':' && atStr(two_points, it) != '\n') {
-      strCut(two_points, it + 1, two_points->size);
-    }
-  }
-  return two_points;
-}
-size_t findCharStr(String *str, char ch) {
-  fiterate_str(str) {
-    if (atStr(str, it) == ch) {
-      return it;
-      break;
-    }
-  }
-  return 0;
-}
-String *getExecutable() {
-  String *proj_name_line = extractLine(newStr("./hbuild/build.conf"), 1);
-  size_t two_p = findCharStr(proj_name_line, ':');
-  String *proj_name = allocStr(256);
-  mvStr(proj_name, proj_name_line);
-  strCut(proj_name, two_p + 1, two_p + 2);
   String *exe_path = allocStr(256);
   str_snprintf(exe_path, "./hbuild/%s", c_str(proj_name));
-  removeNewlines((char *)exe_path->value);
+  rmNewLineStr(exe_path);
   implicitStr(exe_path);
   return exe_path;
 }
-void buildProject() {
-#ifdef WIN32
-#define COMPILER "gcc"
-#else
-#define COMPILER "clang"
-#endif
+void buildProject(String *mode) {
+  nob_log(NOB_INFO, "%s mode is building..", c_str(mode));
   nob_log(NOB_INFO, "building project...");
+  String *build_path = newStr("./hbuild/build.conf");
+  String *compiler = findInConfig(c_str(build_path), newStr("compiler"));
+  if (compiler == NULL) {
+    nob_log(NOB_WARNING, "The default compiler was set to gcc");
+    nob_log(NOB_INFO, "for know how works config see hbuild/example");
+    appendToFile(c_str(build_path), newStr("compiler:gcc\n"));
+    compiler = findInConfig(c_str(build_path), newStr("compiler"));
+  }
+  String *build_mode = findInConfig(c_str(build_path), mode);
+  String *linker_op = findInConfig(c_str(build_path), newStr("link"));
+  String *include_op = findInConfig(c_str(build_path), newStr("include"));
+  if (build_mode == NULL) {
+    nob_log(NOB_WARNING, "%s not found in Config file", c_str(mode));
+    nob_log(NOB_WARNING, "Autogenerated Debug mode in Config file");
+    String *default_debug = newStr("debug:-Wall -Wextra -Wpedantic\n");
+    appendToFile(c_str(build_path), default_debug);
+    build_mode = findInConfig(c_str(build_path), newStr("debug"));
+  }
+  if (include_op == NULL) {
+    nob_log(NOB_INFO, "not found include options");
+    nob_log(NOB_INFO, "setting default include folder...");
+    appendToFile(c_str(build_path), newStr("include:-I./headers\n"));
+    include_op = findInConfig(c_str(build_path), newStr("include"));
+  }
   Nob_Cmd cmd = {0};
   String *exe_path = getExecutable();
-  nob_cmd_append(&cmd, COMPILER, "-Wall", "-Wextra", "-Wpedantic", "-o",
-                 (char *)exe_path->value, "./src/main.c");
+  nob_cmd_append(&cmd, c_str(compiler));  // Compiler name as the first argument
+  if (build_mode != NULL) {
+    String **build_flags = tokStr(build_mode, " ");
+    for (int i = 0; build_flags[i] != NULL; ++i) {
+      nob_cmd_append(&cmd, c_str(build_flags[i]));  
+    }
+  }
+  if(linker_op!=NULL)
+  nob_cmd_append(&cmd, c_str(linker_op));  // Add linker options here if needed
+  nob_cmd_append(&cmd, c_str(include_op)); // Include options
+  nob_cmd_append(&cmd, "-o");              // Output flag
+  nob_cmd_append(&cmd, (char *)exe_path->value); // Output executable path
+  nob_cmd_append(&cmd, "./src/main.c"); // Source file
+
   nob_cmd_run_sync(cmd);
   nob_log(NOB_INFO, "project build successfully!");
 }
@@ -259,7 +245,7 @@ bool subcommands(int argc, char *argv[]) {
             "load \n for read | create a config file for a non-project");
     nob_log(NOB_INFO, "create [project_name] \n for create a proyect");
     nob_log(NOB_INFO, "run \n run the proyect");
-    nob_log(NOB_INFO, "build \n build the proyect");
+    nob_log(NOB_INFO, "build [mode]\n build the proyect");
     nob_log(
         NOB_INFO,
         "crun -d/-r\n run a file without project\n d=debug | r=release flags");
@@ -276,7 +262,7 @@ bool subcommands(int argc, char *argv[]) {
     mHandleIf(nob_mkdir_if_not_exists("./headers"), "dir_headers");
     String *main_text =
         newStr("#include<stdio.h>\n"
-               "int main(void){\nprintf(\"Hello world!%c\",10);\n}");
+               "int main(void){\nprintf(\"Hello world!%c\",10);\n}\n");
     char buffer[256];
     mHandleIf(appendToFile(main_path, main_text), "create_append_main_file");
     snprintf(buffer, sizeof(buffer), "project_name:%s\n", c_str(project_name));
@@ -285,7 +271,8 @@ bool subcommands(int argc, char *argv[]) {
               "append_name_to_config");
     nob_log(NOB_INFO, "project created successfully!");
   } else if (strEq(cmd, newStr("build"))) {
-    buildProject();
+    String *mode=str_shift_args(&argc,&argv);
+    buildProject(mode);
   } else if (strEq(cmd, newStr("run"))) {
     Nob_Cmd cmd = {0};
     if (nob_file_exists(c_str(config_path)) == 0) {
@@ -293,8 +280,9 @@ bool subcommands(int argc, char *argv[]) {
       exit(0);
     }
     String *exe_path = getExecutable();
-    if (!nob_file_exists(c_str(exe_path)) == 0) {
-      buildProject();
+    if (!nob_file_exists((char *)exe_path->value)) {
+      nob_log(NOB_WARNING, "not found executable begining to build...");
+      buildProject(newStr("debug"));
     }
     nob_cmd_append(&cmd, (char *)exe_path->value);
     nob_cmd_run_sync(cmd);
@@ -302,6 +290,6 @@ bool subcommands(int argc, char *argv[]) {
   }
   return EXIT_SUCCESS;
 }
-int main(int argc, char *argv[]) {
-    subcommands(argc, argv); 
+int main(int argc, char *argv[]) { 
+    subcommands(argc, argv);
 }
