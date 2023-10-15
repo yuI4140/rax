@@ -5,9 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 #define NOB_IMP
-#include "./nob.h"
+#include "../nob.h"
 #define STRING_IMP
-#include "./string/string_t.h"
+#include "../string/string_t.h"
 #include "macros.h"
 #define IO_STRING_IMP
 #include "./io_str.h"
@@ -106,7 +106,8 @@ String *findInConfig(const char *file_path, String *target) {
     clearStr(cftext);
   }
 
-  nob_log(NOB_WARNING, "Target %s not found in the config file.",c_str(target));
+  nob_log(NOB_WARNING, "Target %s not found in the config file.",
+          c_str(target));
   return NULL;
 }
 Config *newConfigExists(const char *path) {
@@ -206,30 +207,30 @@ void nonBuildProject(String *mode) {
     build_mode = findInConfig(c_str(build_path), newStr("debug"));
   }
   Nob_Cmd cmd = {0};
-  String *exe_path = findInConfig(c_str(build_path),
-          newStr("exe_path"));
-   String *src_file = findInConfig(c_str(build_path),
-          newStr("src_file"));
-  if (exe_path==NULL) {
-  nob_log(NOB_ERROR,"Add exe_path label in Config file!");
-  exit(0);
+  String *exe_path = findInConfig(c_str(build_path), newStr("exe_path"));
+  String *src_file = findInConfig(c_str(build_path), newStr("src_file"));
+  if (exe_path == NULL) {
+    nob_log(NOB_ERROR, "Add exe_path label in Config file!");
+    exit(0);
   }
-  if (src_file==NULL) {
-  nob_log(NOB_ERROR,"Add src_file label in Config file!");
-  exit(0);
+  if (src_file == NULL) {
+    nob_log(NOB_ERROR, "Add src_file label in Config file!");
+    exit(0);
   }
-  nob_cmd_append(&cmd, c_str(compiler)); 
+  nob_cmd_append(&cmd, c_str(compiler));
   if (build_mode != NULL) {
     String **build_flags = tokStr(build_mode, " ");
     for (int i = 0; build_flags[i] != NULL; ++i) {
-      nob_cmd_append(&cmd, c_str(build_flags[i]));  
+      nob_cmd_append(&cmd, c_str(build_flags[i]));
     }
   }
-  if(linker_op!=NULL) nob_cmd_append(&cmd, c_str(linker_op)); 
-  if(include_op!=NULL) nob_cmd_append(&cmd, c_str(include_op)); 
-  nob_cmd_append(&cmd, "-o");             
-  nob_cmd_append(&cmd, (char *)exe_path->value); 
-  nob_cmd_append(&cmd,c_str(src_file));
+  if (linker_op != NULL)
+    nob_cmd_append(&cmd, c_str(linker_op));
+  if (include_op != NULL)
+    nob_cmd_append(&cmd, c_str(include_op));
+  nob_cmd_append(&cmd, "-o");
+  nob_cmd_append(&cmd, (char *)exe_path->value);
+  nob_cmd_append(&cmd, c_str(src_file));
 
   nob_cmd_run_sync(cmd);
   nob_log(NOB_INFO, "project build successfully!");
@@ -240,6 +241,8 @@ void buildProject(String *mode) {
   nob_log(NOB_INFO, "building project...");
   String *build_path = newStr("./hbuild/build.conf");
   String *compiler = findInConfig(c_str(build_path), newStr("compiler"));
+  String *project_name =
+      findInConfig(c_str(build_path), newStr("project_name"));
   if (compiler == NULL) {
     nob_log(NOB_WARNING, "The default compiler was set to gcc");
     nob_log(NOB_INFO, "for know how works config see hbuild/example");
@@ -264,19 +267,21 @@ void buildProject(String *mode) {
   }
   Nob_Cmd cmd = {0};
   String *exe_path = getExecutable();
-  nob_cmd_append(&cmd, c_str(compiler));  // Compiler name as the first argument
+  nob_cmd_append(&cmd, c_str(compiler)); // Compiler name as the first argument
   if (build_mode != NULL) {
     String **build_flags = tokStr(build_mode, " ");
     for (int i = 0; build_flags[i] != NULL; ++i) {
-      nob_cmd_append(&cmd, c_str(build_flags[i]));  
+      nob_cmd_append(&cmd, c_str(build_flags[i]));
     }
   }
-  if(linker_op!=NULL)
-  nob_cmd_append(&cmd, c_str(linker_op));
+  String *main_path = allocStr(256);
+  str_snprintf(main_path,"./src/%s.c",c_str(project_name));
+  if (linker_op != NULL)
+    nob_cmd_append(&cmd, c_str(linker_op));
   nob_cmd_append(&cmd, c_str(include_op));
-  nob_cmd_append(&cmd, "-o");          
-  nob_cmd_append(&cmd, (char *)exe_path->value); 
-  nob_cmd_append(&cmd, "./src/main.c"); 
+  nob_cmd_append(&cmd, "-o");
+  nob_cmd_append(&cmd, (char *)exe_path->value);
+  nob_cmd_append(&cmd, (char *)main_path->value);
 
   nob_cmd_run_sync(cmd);
   nob_log(NOB_INFO, "project build successfully!");
@@ -302,7 +307,6 @@ bool subcommands(int argc, char *argv[]) {
     nob_log(NOB_INFO, "Loading config...");
     (void)initConfig(c_str(config_path));
   } else if (strEq(cmd, newStr("create"))) {
-    const char *main_path = "./src/main.c";
     String *project_name = str_shift_args(&argc, &argv);
     nob_log(NOB_INFO, "building project..");
     mHandleIf(nob_mkdir_if_not_exists("./src"), "dir_src");
@@ -313,20 +317,22 @@ bool subcommands(int argc, char *argv[]) {
         newStr("#include<stdio.h>\n"
                "int main(void){\nprintf(\"Hello world!%c\",10);\n}\n");
     char buffer[256];
-    mHandleIf(appendToFile(main_path, main_text), "create_append_main_file");
     snprintf(buffer, sizeof(buffer), "project_name:%s\n", c_str(project_name));
+    String *main_path = allocStr(256);
+    str_snprintf(main_path, "./src/%s.c", c_str(project_name));
+    mHandleIf(appendToFile((char *)main_path->value, main_text),
+              "create_append_main_file");
     (void)startConfig(config_path);
     mHandleIf(appendToFile(c_str(config_path), newStr(buffer)),
               "append_name_to_config");
     nob_log(NOB_INFO, "project created successfully!");
   } else if (strEq(cmd, newStr("build"))) {
-    String *mode=str_shift_args(&argc,&argv);
-    buildProject(mode); 
+    String *mode = str_shift_args(&argc, &argv);
+    buildProject(mode);
   } else if (strEq(cmd, newStr("nbuild"))) {
-    String *mode=str_shift_args(&argc,&argv);
+    String *mode = str_shift_args(&argc, &argv);
     nonBuildProject(mode);
-  }
-  else if (strEq(cmd, newStr("run"))) {
+  } else if (strEq(cmd, newStr("run"))) {
     Nob_Cmd cmd = {0};
     if (nob_file_exists(c_str(config_path)) == 0) {
       nob_log(NOB_WARNING, "config not initialize!");
@@ -343,6 +349,4 @@ bool subcommands(int argc, char *argv[]) {
   }
   return EXIT_SUCCESS;
 }
-int main(int argc, char *argv[]) { 
-    subcommands(argc, argv);
-}
+int main(int argc, char *argv[]) { subcommands(argc, argv); }
